@@ -5,6 +5,13 @@ This is a very simple minesweeper program written by C# in Visual Studio 2019. T
 
 ![alt text](demo_.png)
 
+## 0. How to click?
+- Left click, explore this gird cell. 
+
+- Middle click, explore the surrounded grid cells. 
+
+- Right click, mark the mine with a question mark.
+
 ## 1. MineSweeping Algorithm
 ### 1.1 Variables
 - `bool[] mines_grid` defines where stores the mine, where `true` means there is a mine at the grid cell. 
