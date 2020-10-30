@@ -1,4 +1,6 @@
-﻿using System;
+﻿// https://github.com/realypz/MineSweeper-ypz
+
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -120,7 +122,7 @@ namespace MineSweeper_ypz
 
         private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            System.Diagnostics.Process.Start("http://www.c-sharpcorner.com/Default.aspx");
+            System.Diagnostics.Process.Start("https://github.com/realypz/MineSweeper-ypz");
             MessageBox.Show("Mine Sweeper Version 20H2. realypz 版權所有.");
         }
 
