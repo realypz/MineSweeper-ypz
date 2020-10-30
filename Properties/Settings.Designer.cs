@@ -73,7 +73,7 @@ namespace MineSweeper_ypz.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("20")]
+        [global::System.Configuration.DefaultSettingValueAttribute("25")]
         public int grid_length {
             get {
                 return ((int)(this["grid_length"]));

@@ -34,6 +34,7 @@
             this.radioButton_hard = new System.Windows.Forms.RadioButton();
             this.menuBar = new System.Windows.Forms.MenuStrip();
             this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.label_status = new System.Windows.Forms.Label();
             this.menuBar.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -91,7 +92,7 @@
             this.aboutToolStripMenuItem});
             this.menuBar.Location = new System.Drawing.Point(0, 0);
             this.menuBar.Name = "menuBar";
-            this.menuBar.Size = new System.Drawing.Size(649, 24);
+            this.menuBar.Size = new System.Drawing.Size(388, 24);
             this.menuBar.TabIndex = 3;
             this.menuBar.Text = "menuStrip1";
             // 
@@ -102,11 +103,21 @@
             this.aboutToolStripMenuItem.Text = "About";
             this.aboutToolStripMenuItem.Click += new System.EventHandler(this.aboutToolStripMenuItem_Click);
             // 
+            // label_status
+            // 
+            this.label_status.AutoSize = true;
+            this.label_status.Location = new System.Drawing.Point(85, 24);
+            this.label_status.Name = "label_status";
+            this.label_status.Size = new System.Drawing.Size(41, 12);
+            this.label_status.TabIndex = 4;
+            this.label_status.Text = "label1";
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(649, 450);
+            this.ClientSize = new System.Drawing.Size(388, 450);
+            this.Controls.Add(this.label_status);
             this.Controls.Add(this.radioButton_hard);
             this.Controls.Add(this.radioButton_median);
             this.Controls.Add(this.radioButton_easy);
@@ -134,6 +145,7 @@
         private System.Windows.Forms.RadioButton radioButton_hard;
         private System.Windows.Forms.MenuStrip menuBar;
         private System.Windows.Forms.ToolStripMenuItem aboutToolStripMenuItem;
+        private System.Windows.Forms.Label label_status;
     }
 }
 

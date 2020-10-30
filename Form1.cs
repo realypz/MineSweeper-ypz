@@ -12,74 +12,66 @@ namespace MineSweeper_ypz
 {
     public unsafe partial class Form1 : Form
     {
-
+        // Constants for the definition of mines grid
+        private int n_mines;
         private int n_horizontal;
         private int n_vertical;
+        private int fail_at_index;
+
+
+        // Constants for the grid visualization and text drawing
         private int offset_left;
         private int offset_right;
         private int offset_top;
-        private int n_mines;
         private int grid_length;
-        public int offset_bottom;
+        private int offset_bottom;
         private int grid_length_eps;
-
-        private string status;
-
-        private bool[] mines_grid;
-        private int[] traverseMatrix;
-
         private Font font_numbr;
+        private int offset_text_display_h;
+        private int offset_text_display_v;
+
+
+        // Game state variables
+        private bool[] mines_grid; // where 1 means there is a mine.
+        private int[] traverseMatrix; // All the values initialized as -1. If the grid cell has been explored, then then the value will be how many mines around this grid.
+        private bool[] markMatrix; // where 1 means marked as a mine by the player.
+        private string status; // one of "on-going", "failed", "succeed"
 
 
         public unsafe Form1()
         {
             InitializeComponent();
             this.DoubleBuffered = true;
-            this.status = "on-going";
 
-            this.font_numbr = new Font("Arial", 12, FontStyle.Bold, GraphicsUnit.Point);
 
-            offset_left = 5;                                   //初始化偏移量
+            // Constants for the grid and text drawing
+            grid_length_eps = 2;
+            grid_length = Properties.Settings.Default.grid_length;
+
+            offset_left = 5;                                   
             offset_right = 5;
 
             offset_top = menuBar.Size.Height + label_level.Size.Height + radioButton_easy.Size.Height + 5 ;
             offset_bottom = 5;
-            
-            //MessageBox.Show(String.Format("{0}", offset_top));
 
-            n_mines = Properties.Settings.Default.n_mines;      //初始化，从Settings读取地雷数量
-            n_horizontal = Properties.Settings.Default.n_horizontal;    //初始化，从Settings读取行数
-            n_vertical = Properties.Settings.Default.n_vertical;  //初始化，从Settings读取列数
+            offset_text_display_v = 3;
+            offset_text_display_h = 4;
+            this.font_numbr = new Font("Arial", 12, FontStyle.Bold, GraphicsUnit.Point);
 
-            grid_length_eps = 3;
-            grid_length = Properties.Settings.Default.grid_length;
-                    
-            UpdateWindowSize(n_horizontal, n_vertical);  //自适应窗口大小
 
-            // 初始化扫雷区
-            this.mines_grid = InitializeGrid(n_vertical, n_horizontal, n_mines);
-            this.traverseMatrix = InitializeTraverseMatrix(n_vertical, n_horizontal);
+            // Constants for the definition of mines grid
+            n_mines = Properties.Settings.Default.n_mines;      
+            n_horizontal = Properties.Settings.Default.n_horizontal;    
+            n_vertical = Properties.Settings.Default.n_vertical; 
 
-  
-
-            int sum = 0;
-            string _msg = "The mines are under ";
-            for(int i = 0; i< n_horizontal* n_vertical; i++)
-            {
-                if(mines_grid[i] == true)
-                {
-                    _msg += i.ToString() + " ";
-                    sum += 1;
-                }
-            }
-            MessageBox.Show(_msg);
+            IntializeGame(n_vertical, n_horizontal, n_mines);
 
         }
 
 
         private bool[] InitializeGrid(int n_vertical, int n_horizontal, int n_mines)
-        {
-            //https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/unsafe-code-pointers/pointer-types
+        {   // Initialize the grid of mines. Randomly assign the mines over the grids.
+
             bool[] mines_grid = new bool[n_horizontal * n_vertical];
 
             for (int i = 0; i < n_mines; i++)
@@ -103,7 +95,7 @@ namespace MineSweeper_ypz
         }
 
         private int[] InitializeTraverseMatrix(int n_vertical, int n_horizontal)
-        {
+        {  
             int[] traverseMatrix = new int[n_vertical * n_horizontal];
             for (int i = 0; i < n_vertical * n_horizontal; i++)
             {
@@ -113,55 +105,50 @@ namespace MineSweeper_ypz
             return traverseMatrix;
         }
 
-        private void InitializeGrid_v2(bool[] mines_grid, int n_vertical, int n_horizontal, int n_mines)
+
+        private bool[] InitializeMarkMatrix(int n_vertical, int n_horizontal)
         {
-            //https://docs.microsoft.com/en-us/dotnet/csharp/programming-guide/unsafe-code-pointers/pointer-types
-            mines_grid = new bool[n_horizontal * n_vertical];
-
-            for (int i = 0; i < n_mines; i++)
+            bool[] markMatrix = new bool[n_vertical * n_horizontal];
+            for (int i = 0; i < n_vertical * n_horizontal; i++)
             {
-                mines_grid[i] = false;
+                markMatrix[i] = false;
             }
 
-            Random rnd = new Random();
-
-            int _i = 0;
-            while (_i < n_mines)
-            {
-                int mine_idx = rnd.Next(n_vertical * n_horizontal);
-                if (mines_grid[mine_idx] == false)
-                {
-                    mines_grid[mine_idx] = true;
-                    _i++;
-                }
-            }
+            return markMatrix;
         }
+
 
         private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            MessageBox.Show("Mine Sweeper Version 20H2. Microsoft 版權所有.");
-            // 增加 title
-
-            // 讓該彈出窗口放在程序正中間位置。
+            System.Diagnostics.Process.Start("http://www.c-sharpcorner.com/Default.aspx");
+            MessageBox.Show("Mine Sweeper Version 20H2. realypz 版權所有.");
         }
 
 
 
-
-
-
-        private void radioButton_easy_CheckedChanged(object sender, EventArgs e)
-        {
-            n_horizontal = 10;    //初始化，从Settings读取行数
-            n_vertical = 10;  //初始化，从Settings读取列数
-            n_mines = 15;
-
+        private void IntializeGame(int n_vertical, int n_horizontal, int n_mines)
+        {   // A template of the intialization for all three modes.
             this.status = "on-going";
+            this.label_status.Text = "on-going";
+            this.label_status.ForeColor = System.Drawing.Color.Blue;
+
+            this.fail_at_index = -1;
             this.mines_grid = InitializeGrid(n_vertical, n_horizontal, n_mines);
             this.traverseMatrix = InitializeTraverseMatrix(n_vertical, n_horizontal);
+            this.markMatrix = InitializeMarkMatrix(n_vertical, n_horizontal);
 
             UpdateWindowSize(n_horizontal, n_vertical);
             this.Refresh();
+        }
+
+
+        private void radioButton_easy_CheckedChanged(object sender, EventArgs e)
+        {   // Set the mode to easy.
+            n_horizontal = 12;   
+            n_vertical = 10; 
+            n_mines = 15;
+
+            IntializeGame(n_vertical, n_horizontal, n_mines);
         }
 
         private void radioButton_easy_Click(object sender, EventArgs e)
@@ -171,39 +158,26 @@ namespace MineSweeper_ypz
 
 
         private void radioButton_median_CheckedChanged(object sender, EventArgs e)
-        {
-            // Set the mode to median.
+        {   // Set the mode to median.
             n_horizontal = 25;   
-            n_vertical = 25;  
-            n_mines = 80;
+            n_vertical = 20;  
+            n_mines = 70;
 
-            this.status = "on-going";
-            this.mines_grid = InitializeGrid(n_vertical, n_horizontal, n_mines);
-            this.traverseMatrix = InitializeTraverseMatrix(n_vertical, n_horizontal);
-
-            // Load a new GUI.
-            UpdateWindowSize(n_horizontal, n_vertical);
-            this.Refresh();
+            IntializeGame(n_vertical, n_horizontal, n_mines);
         }
+
         private void radioButton_median_Click(object sender, EventArgs e)
         {
             radioButton_median_CheckedChanged(sender, e);
         }
 
         private void radioButton_hard_CheckedChanged(object sender, EventArgs e)
-        {
-            // Set the mode to hard.
-            n_horizontal = 30;    //初始化，从Settings读取行数
-            n_vertical = 30;  //初始化，从Settings读取列数
-            n_mines = 99;
-       
-            this.status = "on-going";
-            this.mines_grid = InitializeGrid(n_vertical, n_horizontal, n_mines);
-            this.traverseMatrix = InitializeTraverseMatrix(n_vertical, n_horizontal);
+        {   // Set the mode to hard.
+            n_horizontal = 30;    
+            n_vertical = 20;  
+            n_mines = 80;
 
-            // Load a new GUI.
-            UpdateWindowSize(n_horizontal, n_vertical);
-            this.Refresh();
+            IntializeGame(n_vertical, n_horizontal, n_mines);
         }
 
         private void radioButton_hard_Click(object sender, EventArgs e)
@@ -212,13 +186,10 @@ namespace MineSweeper_ypz
         }
 
 
-
-
-
-
-
         private void Form1_Paint(object sender, PaintEventArgs e)
-        {
+        {   // All the grids are drawn by this function.
+            // this.markMatrix, this.mines_grid, this.traverseMatrix and this.status are the four variables to determine how to fill the colors and text of the grids.
+
             // Draw text on a rectangle.
             // https://docs.microsoft.com/en-us/dotnet/desktop/winforms/advanced/how-to-draw-wrapped-text-in-a-rectangle?view=netframeworkdesktop-4.8
 
@@ -235,24 +206,29 @@ namespace MineSweeper_ypz
                     {
                         int index = n_horizontal * i_v + i_h;
                         Rectangle rec = new Rectangle(offset_left + grid_length * i_h, offset_top + grid_length * i_v, grid_length - grid_length_eps, grid_length - grid_length_eps);
+                        Rectangle rec_for_text = new Rectangle(offset_left+ offset_text_display_h + grid_length * i_h, offset_top + offset_text_display_v + grid_length * i_v, grid_length - grid_length_eps, grid_length - grid_length_eps);
                         if (this.traverseMatrix[index] >= 0) // has been traversed
                         {
-
-                            
                             g.FillRectangle(Brushes.LightGray, rec);
 
-                            string number_str = traverseMatrix[index].ToString();
-                            g.DrawString(number_str, font_numbr, Brushes.Black, rec);
+                            string number_str = this.traverseMatrix[index].ToString();
+                            g.DrawString(number_str, font_numbr, Brushes.Black, rec_for_text);
                             
+                        }
+                        else if (this.markMatrix[index] == true)
+                        {
+                            g.FillRectangle(Brushes.DarkGray, rec);
+                            g.DrawString("?", font_numbr, Brushes.Blue, rec_for_text);
                         }
                         else
                         {
                             g.FillRectangle(Brushes.DarkGray, rec);
+                            //g.DrawString("?", font_numbr, Brushes.Black, rec);
                         }
                          
                     }
                 }
-            }else if(this.status == "failed")
+            }else // this.status == "failed" or "succeed"
             {
                 for (int i_v = 0; i_v < n_vertical; i_v++)
                 {
@@ -260,21 +236,41 @@ namespace MineSweeper_ypz
                     {
                         int index = n_horizontal * i_v + i_h;
                         Rectangle rec = new Rectangle(offset_left + grid_length * i_h, offset_top + grid_length * i_v, grid_length - grid_length_eps, grid_length - grid_length_eps);
+                        Rectangle rec_for_text = new Rectangle(offset_left + offset_text_display_h + grid_length * i_h, offset_top + offset_text_display_v + grid_length * i_v, grid_length - grid_length_eps, grid_length - grid_length_eps);
+
                         if (this.mines_grid[index] == true) 
                         {
-                            g.FillRectangle(Brushes.Red, rec);
+                            if(index == this.fail_at_index)
+                            {
+                                g.FillRectangle(Brushes.DarkRed, rec);
+                            }
+                            else
+                            {
+                                g.FillRectangle(Brushes.Red, rec);
+                            }
 
-                            string number_str = "x";
-                            g.DrawString(number_str, font_numbr, Brushes.Black, rec);
+                            if(this.markMatrix[index] == true)
+                            {
+                               
+                                g.DrawString("?", font_numbr, Brushes.Blue, rec_for_text);
+                            }
+                            
                             
                         }
                         else
                         {
-                            g.FillRectangle(Brushes.DarkGray, rec);
+                            if(this.traverseMatrix[index] >= 0)
+                                g.FillRectangle(Brushes.LightGray, rec);
+                            else
+                                g.FillRectangle(Brushes.DarkGray, rec);
+
                             if (this.traverseMatrix[index] >= 0)
                             {
                                 string number_str = this.traverseMatrix[index].ToString();
-                                g.DrawString(number_str, font_numbr, Brushes.Black, rec);
+                                g.DrawString(number_str, font_numbr, Brushes.Black, rec_for_text);
+                            }else if (this.markMatrix[index] == true)
+                            {
+                                g.DrawString("?", font_numbr, Brushes.Blue, rec_for_text);
                             }
                         }
 
@@ -283,98 +279,160 @@ namespace MineSweeper_ypz
 
             }
 
-
         }
 
 
         private void UpdateWindowSize(int n_hori, int n_vert)
-        {
+        {   // When you swith to another level, the entire windows will be redrawn according to the grid size.
             this.Width = n_hori * grid_length +  offset_left + offset_right - grid_length_eps + (this.Size.Width - this.ClientSize.Width);
             this.Height = n_vert * grid_length + offset_top + offset_bottom - grid_length_eps + (this.Size.Height - this.ClientSize.Height); // + offset_top
-            //int height_update = SystemInformation.CaptionHeight +10; // + offset_top
-            //this.Width = width_update + (this.Size.Width - this.ClientSize.Width);
-            //this.Height = high_update + 40 + (this.Size.Height - this.ClientSize.Height);
-            Refresh();
-
+            this.Refresh();
         }      
 
 
-       
-        private void ClickGrid_xy(int i_h, int i_v)
-        {
-            int index = n_horizontal * i_v + i_h;
-
-        }
-
         private void Form1_MouseClick(object sender, MouseEventArgs e)
         {
-            // Compute i_h and i_v
-
-            if (this.status == "failed") 
+            if (this.status != "on-going") 
                 return;
 
-            if (e.Button == System.Windows.Forms.MouseButtons.Left)
+            bool cursor_in_grid = e.X >= offset_left && e.Y >= offset_top && e.X < this.ClientSize.Width - offset_right && e.Y < this.ClientSize.Height - offset_bottom;
+
+            if (cursor_in_grid)
             {
+                // compute the coordinate (i_h, i_v) of this gird where the mouse clicks.
+                int i_h = (e.X - offset_left) / grid_length;
+                int i_v = (e.Y - offset_top) / grid_length;
 
-                bool cursor_in_grid = e.X >= offset_left && e.Y >= offset_top && e.X < this.ClientSize.Width - offset_right && e.Y < this.ClientSize.Height - offset_bottom;
+                // Compute index
+                int index = n_horizontal * i_v + i_h;
 
-                if (cursor_in_grid)
+                if (index >= 0 && index < n_horizontal * n_vertical)
                 {
-                    int i_h = (e.X - offset_left) / grid_length;
-                    int i_v = (e.Y - offset_top) / grid_length;
-                    //string s1 = String.Format("ih = {0}, iv = {1}.", i_h, i_v);
+                    bool leftClick = e.Button == System.Windows.Forms.MouseButtons.Left;
+                    bool rightClick = e.Button == System.Windows.Forms.MouseButtons.Right;
 
-
-
-                    //string s2 = String.Format("e.X = {0}, e.Y = {1}.", e.X, e.Y);
-                    //MessageBox.Show(s2);
-
-                    // Compute index
-                    int index = n_horizontal * i_v + i_h;
-
-                    if (index >= 0 && index < n_horizontal * n_vertical)
-                    {
-                        if (mines_grid[index] == true)
+                    if (leftClick == true && rightClick == false) { 
+                        if (this.markMatrix[index] == false)
                         {
-                            // Click a mine                  
-                            this.status = "failed";
-                            this.Refresh();
-                            MessageBox.Show("You lose!");
+                            if (mines_grid[index] == true)
+                            {
+                                // Click a mine                  
+                                this.status = "failed";
+                                this.fail_at_index = index;
 
+                                this.label_status.ForeColor = System.Drawing.Color.Red;
+                                this.label_status.Text = "failed";
 
-                        }
-                        else
-                        {
-                            // Click a blank, expand
-                            ExploreGrid(i_v, i_h, n_vertical, n_horizontal, mines_grid, traverseMatrix);
+                                this.Refresh();
 
-                            string s1 = traverseMatrix[index].ToString() + " mines surrounded.";
-                            //MessageBox.Show(s1);
-                            this.Refresh();
+                                MessageBox.Show("You lose!");
+                            }
+                            else
+                            {
+                                // Click a blank, expand
+                                ExploreGrid(i_v, i_h, n_vertical, n_horizontal, this.mines_grid, this.traverseMatrix, this.markMatrix);
+
+                                string s1 = this.traverseMatrix[index].ToString() + " mines surrounded.";
+                                //MessageBox.Show(s1);
+                                //this.Refresh();
+                            }
                         }
                     }
+                    else if (leftClick == false && rightClick == true)
+                    {
+                        if(this.traverseMatrix[index] < 0)
+                        {
+                            this.markMatrix[index] = !this.markMatrix[index];
+                        }
+
+                    }
+                    else if(e.Button == System.Windows.Forms.MouseButtons.Middle)
+                    {
+                        if(this.markMatrix[index] == false && this.traverseMatrix[index] >= 0)
+                        {
+                            int number_of_mines_surrounded = CalculateMinesAround(i_v, i_h, n_vertical, n_horizontal, this.mines_grid, this.traverseMatrix, true);
+                            int number_of_marked_mines_surrounded = CalculateMarksAround(i_v, i_h, n_vertical, n_horizontal, this.markMatrix); 
+                            
+                            if(number_of_mines_surrounded == number_of_marked_mines_surrounded)
+                            {
+                                ExploreGrid(i_v -1 , i_h - 1, n_vertical, n_horizontal, this.mines_grid, this.traverseMatrix, this.markMatrix);
+                                ExploreGrid(i_v -1 , i_h    , n_vertical, n_horizontal, this.mines_grid, this.traverseMatrix, this.markMatrix);
+                                ExploreGrid(i_v -1 , i_h + 1, n_vertical, n_horizontal, this.mines_grid, this.traverseMatrix, this.markMatrix);
+                                ExploreGrid(i_v,     i_h - 1, n_vertical, n_horizontal, this.mines_grid, this.traverseMatrix, this.markMatrix);
+                                ExploreGrid(i_v,     i_h + 1, n_vertical, n_horizontal, this.mines_grid, this.traverseMatrix, this.markMatrix);
+                                ExploreGrid(i_v + 1, i_h - 1, n_vertical, n_horizontal, this.mines_grid, this.traverseMatrix, this.markMatrix);
+                                ExploreGrid(i_v + 1, i_h    , n_vertical, n_horizontal, this.mines_grid, this.traverseMatrix, this.markMatrix);
+                                ExploreGrid(i_v + 1, i_h + 1, n_vertical, n_horizontal, this.mines_grid, this.traverseMatrix, this.markMatrix);
+
+                            }
+                        }
+                    }
+                    
                 }
-            }else if (e.Button == System.Windows.Forms.MouseButtons.Right)
-            {
 
             }
+            
+            if(CheckSucceed(n_vertical, n_horizontal))
+            {
+                this.status = "succeed";
+                this.label_status.Text = "succeed!";
+                this.label_status.ForeColor = System.Drawing.Color.Green;
+                this.Refresh();
+                MessageBox.Show("Succeed");
+            }
 
+
+            this.Refresh();
         }
 
 
-        private void ExploreGrid(int i_v, int i_h, int n_vertical, int n_horizontal, bool[] mines_grid, int[] traverseMatrix)
+        private bool CheckSucceed(int n_vertical, int n_horizontal)
         {
-            //std::cout << "in ExploreGrid...\n";
+            for(int i = 0; i < n_vertical * n_horizontal; i++)
+            {
 
-            //bool touch_border = (ix == 0) || (ix == nx - 1) || (iy == 0) || (iy == ny - 1);
+                bool success_i = (this.mines_grid[i] && this.markMatrix[i]) || (!this.mines_grid[i] && !this.markMatrix[i] && (this.traverseMatrix[i] >= 0));
+                if (success_i == false)
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+
+        private void ExploreGrid(int i_v, int i_h, int n_vertical, int n_horizontal, bool[] mines_grid, int[] traverseMatrix, bool[] markMatrix)
+        {
             bool outside_border = (i_v < 0) || (i_v > n_vertical - 1) || (i_h < 0) || (i_h > n_horizontal - 1);
-
-            int index = n_horizontal * i_v + i_h;
 
             if (outside_border == true)
             {
                 return;
             }
+
+            int index = n_horizontal * i_v + i_h;
+
+            if (markMatrix[index] == true)
+            {
+                return;
+            }
+
+            if (mines_grid[index] == true)
+            {
+                // Click a mine                  
+                this.status = "failed";
+                this.fail_at_index = index;
+
+                this.label_status.ForeColor = System.Drawing.Color.Red;
+                this.label_status.Text = "failed";
+
+                this.Refresh();
+                MessageBox.Show("You lose!");
+                return;
+            }
+
+
+
 
             if (traverseMatrix[index] >= 0) // which means has been traversed.
             {
@@ -384,7 +442,7 @@ namespace MineSweeper_ypz
             traverseMatrix[index] = 0;
 
 
-            int number_of_mines_surrounded = CalculateMinesAround(i_v, i_h, n_vertical, n_horizontal, mines_grid, traverseMatrix);
+            int number_of_mines_surrounded = CalculateMinesAround(i_v, i_h, n_vertical, n_horizontal, mines_grid, traverseMatrix, false);
             if (number_of_mines_surrounded > 0)
             {
                 // 旁边有雷，或者触及到了边缘
@@ -393,20 +451,20 @@ namespace MineSweeper_ypz
             }
             else
             {
-                ExploreGrid(i_v - 1, i_h - 1, n_vertical, n_horizontal, mines_grid, traverseMatrix);
-                ExploreGrid(i_v - 1, i_h + 0, n_vertical, n_horizontal, mines_grid, traverseMatrix);
-                ExploreGrid(i_v - 1, i_h + 1, n_vertical, n_horizontal, mines_grid, traverseMatrix);
+                ExploreGrid(i_v - 1, i_h - 1, n_vertical, n_horizontal, mines_grid, traverseMatrix, markMatrix);
+                ExploreGrid(i_v - 1, i_h + 0, n_vertical, n_horizontal, mines_grid, traverseMatrix, markMatrix);
+                ExploreGrid(i_v - 1, i_h + 1, n_vertical, n_horizontal, mines_grid, traverseMatrix, markMatrix);
 
-                ExploreGrid(i_v, i_h - 1, n_vertical, n_horizontal, mines_grid, traverseMatrix);
-                ExploreGrid(i_v, i_h + 1, n_vertical, n_horizontal, mines_grid, traverseMatrix);
+                ExploreGrid(i_v, i_h - 1, n_vertical, n_horizontal, mines_grid, traverseMatrix, markMatrix);
+                ExploreGrid(i_v, i_h + 1, n_vertical, n_horizontal, mines_grid, traverseMatrix, markMatrix);
 
-                ExploreGrid(i_v + 1, i_h - 1, n_vertical, n_horizontal, mines_grid, traverseMatrix);
-                ExploreGrid(i_v + 1, i_h + 0, n_vertical, n_horizontal, mines_grid, traverseMatrix);
-                ExploreGrid(i_v + 1, i_h + 1, n_vertical, n_horizontal, mines_grid, traverseMatrix);
+                ExploreGrid(i_v + 1, i_h - 1, n_vertical, n_horizontal, mines_grid, traverseMatrix, markMatrix);
+                ExploreGrid(i_v + 1, i_h + 0, n_vertical, n_horizontal, mines_grid, traverseMatrix, markMatrix);
+                ExploreGrid(i_v + 1, i_h + 1, n_vertical, n_horizontal, mines_grid, traverseMatrix, markMatrix);
             }
         }
 
-        private int CalculateMinesAround(int i_v, int i_h, int n_vertical, int n_horizontal, bool[] mines_grid, int[] traverseMatrix)
+        private int CalculateMinesAround(int i_v, int i_h, int n_vertical, int n_horizontal, bool[] mines_grid, int[] traverseMatrix, bool read_only)
         {
             int index = n_horizontal * i_v + i_h;
 
@@ -415,7 +473,9 @@ namespace MineSweeper_ypz
                 MessageBox.Show("ERROR!!!");
             }
 
-            traverseMatrix[index] = 0;
+            int sum = 0;
+
+            // traverseMatrix[index] = 0;
 
             for (int i = i_v - 1; i <= i_v + 1; i++)
             {
@@ -423,54 +483,54 @@ namespace MineSweeper_ypz
                 {
                     int _idx_ = i * n_horizontal + j;
 
-                    //if (_idx_ > 0 && _idx_ < n_vertical * n_horizontal)
-                    if(i >=0 && i < n_vertical && j >= 0 && j < n_horizontal)
-                    {
+                    if(i >=0 && i < n_vertical && j >= 0 && j < n_horizontal && _idx_ != index)
+                    {   
                         if (mines_grid[_idx_] == true)
                         {
-                            //std::cout << "index = " << index << std::endl;
-                            traverseMatrix[index]++;
+                            sum ++;
                         }
 
-                    }
-                    else
-                    {
-                        continue;
                     }
                 }
 
             }
 
-            return traverseMatrix[index];
+            if (read_only == false)
+            {
+                traverseMatrix[index] = sum;
+            }
+
+            return sum;
 
         }
 
+        private int CalculateMarksAround(int i_v, int i_h, int n_vertical, int n_horizontal, bool[] marksMatrix)
+        {
+            int index = n_horizontal * i_v + i_h;
+
+            int sum = 0;
+
+            for (int i = i_v - 1; i <= i_v + 1; i++)
+            {
+                for (int j = i_h - 1; j <= i_h + 1; j++)
+                {
+                    int _idx_ = i * n_horizontal + j;
+
+                    if (i >= 0 && i < n_vertical && j >= 0 && j < n_horizontal && _idx_ != index)
+                    {
+                        if (marksMatrix[_idx_] == true)
+                        {
+                            sum++;
+                        }
+
+                    }
+                }
+
+            }
+
+            return sum;
+        }
 
 
-
-
-
-
-
-        //private void ShowAllMines(MouseEventArgs e)
-        //{
-        //    Graphics g = e.Graphics;                                //绘制句柄
-        //    for (int i = 0; i < n_vertical; i++)
-        //    {
-        //        for (int j = 0; j < n_horizontal; j++)
-        //        {
-        //            int index = n_horizontal * i_v + i_h;
-
-        //            if (mines_grid[index] == true)
-        //            {
-        //                g.FillRectangle(Brushes.DarkGray, new Rectangle(offset_left + grid_length * i, offset_top + grid_length * j, grid_length - grid_length_eps, grid_length - grid_length_eps));
-        //            }
-        //            else {
-        //                g.FillRectangle(Brushes.LightGray, new Rectangle(offset_left + grid_length * i, offset_top + grid_length * j, grid_length - grid_length_eps, grid_length - grid_length_eps)); 
-        //            }
-
-        //        }
-        //    }
-        //}
     }
 }
