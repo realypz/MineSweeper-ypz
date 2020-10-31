@@ -1,5 +1,5 @@
 # Quick Headings
-Last edited 2020-10-30, 11:00 
+Last edited 2020-10-31, 20:08
 
 This is a very simple minesweeper program written by C# in Visual Studio 2019. The key summaries are below for who wants to learn how to write this simple demo from the very begining.
 
@@ -42,3 +42,46 @@ Remember that all the numbers, question marks and rectangles with color are gene
 See the details in `void Form1_Paint(object sender, PaintEventArgs e)`. You need to carefully write the logic of rendering which depends on several state variables. A good tip is to list a "truth table" when necessary. 
 
 To avoid the laggy animation in rendering, set `this.DoubleBuffered = true`.
+
+
+## 3. Truth table of mouse clicking
+### 3.1 Left click
+| mines_grid[i] | markMatrix[i] | traverseMatrix[i] >= 0 | Response |
+| :-----------: |:-----------:  | :-----------:          |:-------: |
+|0|0|0| explore |
+|0|0|1| none |
+|0|1|0| none |
+|0|1|1| this case should not exist |
+|1|0|0| explore |
+|1|0|1| this case should never been reached, <br> since you already lose the game. |
+|1|1|0| none |
+|1|1|1| this case should not exist |
+| | | | |
+
+### 3.2 Right click
+| mines_grid[i] | markMatrix[i] | traverseMatrix[i] >= 0 | Response |
+| :-----------: |:-----------:  | :-----------:          |:-------: |
+|0|0|0| mark |
+|0|0|1| none |
+|0|1|0| unmark |
+|0|1|1| this case should not exist |
+|1|0|0| mark |
+|1|0|1| this case should never been reached, <br> since you already lose the game. |
+|1|1|0| unmark |
+|1|1|1| this case should not exist |
+| | | | |
+
+
+### 3.3 Middle click
+| mines_grid[i] | markMatrix[i] | traverseMatrix[i] >= 0 | Response |
+| :-----------: |:-----------:  | :-----------:          |:-------: |
+|0|0|0| none |
+|0|0|1| check whether to explore the neighbour cells |
+|0|1|0| none |
+|0|1|1| this case should not exist |
+|1|0|0| none |
+|1|0|1| this case should never been reached, <br> since you already lose the game. |
+|1|1|0| none |
+|1|1|1| this case should not exist |
+| | | | |
+
