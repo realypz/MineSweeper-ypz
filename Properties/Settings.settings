@@ -3,7 +3,7 @@
   <Profiles />
   <Settings>
     <Setting Name="n_horizontal" Type="System.Int32" Scope="Application">
-      <Value Profile="(Default)">10</Value>
+      <Value Profile="(Default)">12</Value>
     </Setting>
     <Setting Name="n_vertical" Type="System.Int32" Scope="Application">
       <Value Profile="(Default)">10</Value>
